@@ -15,6 +15,6 @@ export default async function handler(
       const document = req.body;
 
       client.create(document)
-        .then(() => res.status(201).json('Video created'));
+        .then(() => res.status(201).json('Video created'))
     }
 }
