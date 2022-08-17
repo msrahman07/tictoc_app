@@ -9,7 +9,9 @@ import { HiVolumeUp, HiVolumeOff } from 'react-icons/hi';
 import axios from 'axios';
 import { Video } from '../../types';
 import { BASE_URL } from '../../utils';
-import { useAuthStore } from '../../store/authStore';
+import useAuthStore from '../../store/authStore';
+import LikeButton from '../../components/LikeButton';
+import Comments from '../../components/Comments';
 
 interface IProps {
     postDetails: Video,
@@ -21,7 +23,9 @@ const Detail = ({ postDetails }: IProps) => {
     const [playing, setPlaying] = useState(false);
     const [isVideoMuted, setisVideoMuted] = useState(false);
     const router = useRouter();
-    const userProfile = useAuthStore();
+    const { userProfile } : {userProfile:any} = useAuthStore();
+    const [comment, setComment] = useState('')
+    const [isPostingComment, setIsPostingComment] = useState(false);
 
     const onVideoClick = () => {
         if (playing) {
@@ -33,7 +37,32 @@ const Detail = ({ postDetails }: IProps) => {
         }
     };
 
+
+
     if (!post) return null;
+    
+    const handleLike = async (like: boolean) => {
+        if(userProfile){
+            const { data } = await axios.put(`${BASE_URL}/api/like`, {
+               userId: userProfile._id,
+               postId: post._id,
+               like: like
+            })
+            setPost({...post, likes: data.likes})
+        }
+    };
+
+    const addComment = async (e:any) => {
+        e.preventDefault();
+
+        if(userProfile && comment){
+            setIsPostingComment(true);
+            const response = await axios.put(`${BASE_URL}/api/post/${post._id}`, {
+                userId: userProfile._id,
+                comment
+            })
+        }
+    }
 
     return (
         <div className='flex w-full absolute left-0 top-0 bg-white flex-wrap lg:flex-nowrap'>
@@ -107,11 +136,18 @@ const Detail = ({ postDetails }: IProps) => {
                         <div className='mt-10 px-10'>
                             {userProfile && 
                                 <LikeButton 
-                                
+                                    likes = {post.likes}
+                                    handleLike = {() => handleLike(true)}
+                                    handleDislike = {() => handleLike(false)}
                                 />
                             }
                         </div>
                         <Comments 
+                            comment={comment}
+                            setComment={setComment}
+                            addComment={addComment}
+                            comments={postDetails.comments}
+                            isPostingComment={isPostingComment}
                         />
                     </div>
                 </div>
@@ -121,7 +157,6 @@ const Detail = ({ postDetails }: IProps) => {
 }
 
 export const getServerSideProps = async ({ params: { id } }: { params: { id: string } }) => {
-    console.log("error happening  in detail")
     const { data } = await axios.get(`${BASE_URL}/api/post/${id}`)
     return {
         props: { postDetails: data },
