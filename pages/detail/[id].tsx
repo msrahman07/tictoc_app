@@ -54,13 +54,20 @@ const Detail = ({ postDetails }: IProps) => {
 
     const addComment = async (e:any) => {
         e.preventDefault();
+        console.log("Add comment func working: userProfile before validation");
 
         if(userProfile && comment){
             setIsPostingComment(true);
-            const response = await axios.put(`${BASE_URL}/api/post/${post._id}`, {
+            console.log("Add comment func working after validation: userProfile", userProfile._id, ", comment",comment);
+
+            const {data} = await axios.put(`${BASE_URL}/api/post/${post._id}`, {
                 userId: userProfile._id,
                 comment
-            })
+            });
+            console.log(data);
+            setPost({ ...post, comments:data.comments });
+            setComment("");
+            setIsPostingComment(false);
         }
     }
 
